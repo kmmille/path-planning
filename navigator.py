@@ -218,14 +218,15 @@ def animate(i):
             sol = mpc_.Solve(cur_pos, agent_pos_pred)
             vx_opt = sol['x'][2 * lookahead_step_num]
             vy_opt = sol['x'][3 * lookahead_step_num - 1]
-            # vx_opt = sol['x'][2 * lookahead_step_num]
-            # vy_opt = sol['x'][3 * lookahead_step_num - 1]
-            # vx_opt = sol['x'][2 * lookahead_step_num]
-            # vy_opt = sol['x'][3 * lookahead_step_num - 1]
+            # v_opt = sol['x'][3 * lookahead_step_num]
+            # delta_opt = sol['x'][4 * lookahead_step_num - 1]
+            # cur_pos[2] = vx_opt * lookahead_step_timeinterval*tan(delta_opt)
 
             # simulate forward
             cur_pos[0] = cur_pos[0] + vx_opt * lookahead_step_timeinterval
             cur_pos[1] = cur_pos[1] + vy_opt * lookahead_step_timeinterval
+            # cur_pos[0] = cur_pos[0] + v * lookahead_step_timeinterval * cos(cur_pos[2])
+            # cur_pos[1] = cur_pos[1] + v * lookahead_step_timeinterval * sin(cur_pos[2])
 
             dist_to_goal = sqrt((cur_pos[0] - end_point[0])**2 + (cur_pos[1] - end_point[1])**2)
 
