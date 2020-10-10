@@ -66,6 +66,9 @@ class MPC:
         x_ = [0] * self.num_of_x_
         x_[self.first_state_index_.px:self.first_state_index_.py] = [state[0]] * self.lookahead_step_num
         x_[self.first_state_index_.py:self.first_state_index_.vx] = [state[1]] * self.lookahead_step_num
+        # x_[self.first_state_index_.py:self.first_state_index_.theta] = [state[2]] * self.lookahead_step_num
+        # x_[self.first_state_index_.py:self.first_state_index_.v] = [self.max_v] * (self.lookahead_step_num - 1)
+        # x_[self.first_state_index_.py:self.first_state_index_.delta] = [pi] * (self.lookahead_step_num - 1)
         x_[self.first_state_index_.vx:self.first_state_index_.vy] = [self.max_v] * (self.lookahead_step_num - 1)
         x_[self.first_state_index_.vy:self.num_of_x_]             = [self.max_v] * (self.lookahead_step_num - 1)
 
@@ -73,19 +76,25 @@ class MPC:
         for i in range(self.lookahead_step_num):
             cte = (x[self.first_state_index_.px + i] - self.end_point[0])**2 + (x[self.first_state_index_.py + i] - self.end_point[1])**2
             cost += w_cte * cte
+
         # penalty on inputs
         for i in range(self.lookahead_step_num - 2):
+            # dv = x[self.first_state_index_.v + i + 1] - x[self.first_state_index_.v + i]
+            # ddelta = x[self.first_state_index_.delta + i + 1] - x[self.first_state_index_.delta + i]
             dvx = x[self.first_state_index_.vx + i + 1] - x[self.first_state_index_.vx + i]
             dvy = x[self.first_state_index_.vy + i + 1] - x[self.first_state_index_.vy + i]
             cost += w_dv*(dvx**2) + w_dv*(dvy**2)
+            # cost += w_dv*(dvx**2) + w_dv*(dvy**2)
 
         # define lowerbound and upperbound of x
         x_lowerbound_ = [-exp(10)] * self.num_of_x_
         x_upperbound_ = [exp(10)] * self.num_of_x_
         for i in range(self.first_state_index_.vx, self.num_of_x_):
+        # for i in range(self.first_state_index_.v, self.first_state_index_.delta-1):
             x_lowerbound_[i] = -self.max_v
             x_upperbound_[i] = self.max_v
         for i in range(self.first_state_index_.py, self.first_state_index_.vx-1):
+        # for i in range(self.first_state_index_.py, self.first_state_index_.theta-1):
             x_lowerbound_[i] = -0.1
             x_upperbound_[i] = 0.1
 
@@ -134,8 +143,8 @@ class MPC:
             next_m_px = curr_px + curr_vx * self.lookahead_step_timeinterval
             next_m_py = curr_py + curr_vy * self.lookahead_step_timeinterval
             # next_m_px = curr_px + curr_v*self.lookahead_step_timeinterval*cos(curr_theta)
-            # next_m_theta = curr_py + curr_v*self.lookahead_step_timeinterval*sin(curr_theta)
-            # next_m_theta = curr
+            # next_m_py = curr_py + curr_v*self.lookahead_step_timeinterval*sin(curr_theta)
+            # next_m_theta = curr_theta + curr_v*self.lookahead_step_timeinterval*tan(\phi)
 
             # equality constraints
             g[1 + curr_px_index] = next_px - next_m_px
@@ -179,7 +188,6 @@ def animate(i):
                 else:
                     agent_state.append(agent_pt_list[j][len(agent_pt_list[j]) - 1])
             agent_pos_pred.append(agent_state)
-        print(agent_pos_pred)
 
         if dist_to_goal > thres:
 
@@ -188,6 +196,7 @@ def animate(i):
 
             # plot robot position
             current_pos.set_data(cur_pos[0], cur_pos[1])
+            # current_pos.set_data(cur_pos[0], cur_pos[1], cur_pos[2])
 
             # plot agent positions
             agent_pos_1.set_data(agent_pos_pred[0][0][0], agent_pos_pred[0][0][1])
@@ -209,6 +218,10 @@ def animate(i):
             sol = mpc_.Solve(cur_pos, agent_pos_pred)
             vx_opt = sol['x'][2 * lookahead_step_num]
             vy_opt = sol['x'][3 * lookahead_step_num - 1]
+            # vx_opt = sol['x'][2 * lookahead_step_num]
+            # vy_opt = sol['x'][3 * lookahead_step_num - 1]
+            # vx_opt = sol['x'][2 * lookahead_step_num]
+            # vy_opt = sol['x'][3 * lookahead_step_num - 1]
 
             # simulate forward
             cur_pos[0] = cur_pos[0] + vx_opt * lookahead_step_timeinterval
@@ -227,7 +240,7 @@ if __name__ == '__main__':
     lookahead_step_timeinterval = 0.1
 
     # start point and end point of ego robot
-    start_point = [0.0, 0.0]
+    start_point = [0.0, 0.0, 0]
     end_point = [1, 0]
 
     # agent velocity
