@@ -13,7 +13,7 @@ import copy
 import numpy as np
 import matplotlib.pyplot as plt
 from casadi import *
-from math import sqrt
+from math import *
 from matplotlib import animation
 
 def onClick(event):
@@ -24,6 +24,9 @@ class FirstStateIndex:
     def __init__(self, n):
         self.px = 0
         self.py = self.px + n
+        # self.theta = self.py + n
+        # self.v = self.theta + n
+        # self.delta = self.theta + n
         self.vx = self.py + n
         self.vy = self.vx + n - 1
 
@@ -49,6 +52,7 @@ class MPC:
         self.num_of_g_ = NUM_OF_STATES * self.lookahead_step_num + NUM_OF_G_STATES * self.lookahead_step_num
 
     def Solve(self, state, agent_state_pred):
+        # predicted state of agents are [[[x, y]_i]_j]
 
         # define optimization variables
         x = SX.sym('x', self.num_of_x_)
@@ -81,6 +85,9 @@ class MPC:
         for i in range(self.first_state_index_.vx, self.num_of_x_):
             x_lowerbound_[i] = -self.max_v
             x_upperbound_[i] = self.max_v
+        for i in range(self.first_state_index_.py, self.first_state_index_.vx-1):
+            x_lowerbound_[i] = -0.1
+            x_upperbound_[i] = 0.1
 
         # define lowerbound and upperbound of g constraints
         g_lowerbound_ = [0] * self.num_of_g_
@@ -106,23 +113,34 @@ class MPC:
         for i in range(self.lookahead_step_num - 1):
             curr_px_index = i + self.first_state_index_.px
             curr_py_index = i + self.first_state_index_.py
+            # curr_theta_index = i + self.first_state_index_.theta
+            # curr_v_index = i + self.first_state_index_.v
+            # curr_delta_index = i + self.first_state_index_.delta
             curr_vx_index = i + self.first_state_index_.vx
             curr_vy_index = i + self.first_state_index_.vy
 
             curr_px = x[curr_px_index]
             curr_py = x[curr_py_index]
+            # curr_theta = x[curr_theta_index]
+            # curr_v = x[curr_v_index]
+            # curr_delta = x[curr_delta_idx]
             curr_vx = x[curr_vx_index]
             curr_vy = x[curr_vy_index]
 
             next_px = x[1 + curr_px_index]
             next_py = x[1 + curr_py_index]
+            # next_theta = x[1 + curr_theta_index]
 
             next_m_px = curr_px + curr_vx * self.lookahead_step_timeinterval
             next_m_py = curr_py + curr_vy * self.lookahead_step_timeinterval
+            # next_m_px = curr_px + curr_v*self.lookahead_step_timeinterval*cos(curr_theta)
+            # next_m_theta = curr_py + curr_v*self.lookahead_step_timeinterval*sin(curr_theta)
+            # next_m_theta = curr
 
             # equality constraints
             g[1 + curr_px_index] = next_px - next_m_px
             g[1 + curr_py_index] = next_py - next_m_py
+            #g[1 + curr_theta_index] = next_theta - next_m_theta
 
             # inequality constraints
             for j in range(self.num_of_agent):
@@ -149,7 +167,7 @@ class MPC:
 def animate(i):
 
     global cur_pos, dist_to_goal, time_stamp
-    
+
     if not pause:
         # get predicted future states of the agents
         agent_pos_pred = []
@@ -161,6 +179,7 @@ def animate(i):
                 else:
                     agent_state.append(agent_pt_list[j][len(agent_pt_list[j]) - 1])
             agent_pos_pred.append(agent_state)
+        print(agent_pos_pred)
 
         if dist_to_goal > thres:
 
@@ -209,14 +228,14 @@ if __name__ == '__main__':
 
     # start point and end point of ego robot
     start_point = [0.0, 0.0]
-    end_point = [1, 1]
+    end_point = [1, 0]
 
     # agent velocity
     agent_vel = 0.1
 
     # start point and end point of agents
-    agent_start = [[0.5, 0], [1, 0.5], [0, 1]]
-    agent_end   = [[0.5, 1], [0, 0.5], [1, 0]]
+    agent_start = [[0.5, -0.5], [0.6,-0.2], [0.8, -0.5]]
+    agent_end   = [[0.5, 0.5], [0.6, 0.7], [1, 1]]
 
     num_of_agent = len(agent_start)
 
