@@ -106,9 +106,11 @@ class MPC:
 
         g_lowerbound_[self.first_state_index_.px] = state[0]
         g_lowerbound_[self.first_state_index_.py] = state[1]
+        g_lowerbound_[self.first_state_index_.theta] = state[2]
 
         g_upperbound_[self.first_state_index_.px] = state[0]
         g_upperbound_[self.first_state_index_.py] = state[1]
+        g_lowerbound_[self.first_state_index_.theta] = state[2]
 
         for i in range(1 + self.first_state_index_.py + 1 * self.lookahead_step_num, self.num_of_g_):
             g_lowerbound_[i] = self.safety_r**2
