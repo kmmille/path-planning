@@ -29,7 +29,7 @@ class FirstStateIndex:
         self.delta = self.v + n - 1
 
 class MPC:
-    def __init__(self, end_point, num_of_agent, safety_r, max_v=0.3, lookahead_step_num=5, lookahead_step_timeinterval=0.1):
+    def __init__(self, end_point, num_of_agent, safety_r, max_v=3, lookahead_step_num=5, lookahead_step_timeinterval=0.1, xlim = None, ylim=None):
 
         # The num of MPC actions, here include vx and vy
         NUM_OF_ACTS = 2
@@ -48,6 +48,8 @@ class MPC:
         self.first_state_index_ = FirstStateIndex(self.lookahead_step_num)
         self.num_of_x_ = NUM_OF_STATES * self.lookahead_step_num + NUM_OF_ACTS * (self.lookahead_step_num - 1)
         self.num_of_g_ = NUM_OF_STATES * self.lookahead_step_num + NUM_OF_G_STATES * self.lookahead_step_num
+        self.xlim = xlim
+        self.ylim = ylim
 
     def Solve(self, state, agent_state_pred):
 
@@ -71,6 +73,7 @@ class MPC:
         for i in range(self.lookahead_step_num):
             cte = (x[self.first_state_index_.px + i] - self.end_point[0])**2 + (x[self.first_state_index_.py + i] - self.end_point[1])**2
             cost += w_cte * cte
+
         # penalty on inputs
         for i in range(self.lookahead_step_num - 2):
             dv     = x[self.first_state_index_.v + i + 1] - x[self.first_state_index_.v + i]
@@ -85,9 +88,17 @@ class MPC:
             x_upperbound_[i] = self.max_v
 
         for i in range(self.first_state_index_.delta, self.num_of_x_):
-            x_lowerbound_[i] = -0.1
-            x_upperbound_[i] = 0.1
+            x_lowerbound_[i] = -1
+            x_upperbound_[i] = 1
 
+        if self.ylim != None:
+            for i in range(self.first_state_index_.py, self.first_state_index_.theta-1):
+                x_lowerbound_[i] = self.ylim[0]
+                x_upperbound_[i] = self.ylim[1]
+        if self.xlim != None:
+            for i in range(self.first_state_index_.px, self.first_state_index_.py-1):
+                x_lowerbound_[i] = self.xlim[0]
+                x_upperbound_[i] = self.xlim[1]
         # define lowerbound and upperbound of g constraints
         g_lowerbound_ = [0] * self.num_of_g_
         g_upperbound_ = [0] * self.num_of_g_
@@ -183,10 +194,14 @@ def animate(i):
 
             # plot robot position
             current_pos.set_data(cur_pos[0], cur_pos[1])
+            x_bound = [cur_pos[0] + 0.5, cur_pos[0] + 0.5, cur_pos[0] - 0.5, cur_pos[0] - 0.5, cur_pos[0] + 0.5]
+            y_bound = [cur_pos[1] + 0.25, cur_pos[1] - 0.25, cur_pos[1] - 0.25, cur_pos[1] + 0.25, cur_pos[1] + 0.25,]
+            car_outline.set_data(x_bound, y_bound)
 
             # plot agent positions
             agent_pos_1.set_data(agent_pos_pred[0][0][0], agent_pos_pred[0][0][1])
             danger_x = agent_pos_pred[0][0][0] + safety_r * np.cos(theta)
+            print(danger_x)
             danger_y = agent_pos_pred[0][0][1] + safety_r * np.sin(theta)
             agent_danger_zone_1.set_data(danger_x, danger_y)
 
@@ -201,6 +216,14 @@ def animate(i):
             agent_danger_zone_3.set_data(danger_x, danger_y)
 
             # solve for optimal control actions
+            print(len(agent_pos_pred))
+            mpc_ = MPC(end_point=end_point,
+                       num_of_agent=len(agent_pos_pred),
+                       safety_r=safety_r,
+                       max_v=max_v,
+                       lookahead_step_num=lookahead_step_num,
+                       lookahead_step_timeinterval=lookahead_step_timeinterval)
+
             sol       = mpc_.Solve(cur_pos, agent_pos_pred)
             v_opt     = sol['x'][3 * lookahead_step_num]
             delta_opt = sol['x'][4 * lookahead_step_num - 1]
@@ -214,9 +237,22 @@ def animate(i):
 
             time_stamp += 1
 
-            return current_pos, agent_pos_1, agent_danger_zone_1, agent_pos_2, agent_danger_zone_2, agent_pos_3, agent_danger_zone_3
+            return current_pos, car_outline, agent_pos_1, agent_danger_zone_1, agent_pos_2, agent_danger_zone_2, agent_pos_3, agent_danger_zone_3
 
 if __name__ == '__main__':
+
+    # end_point = [40, 40]
+    # num_of_agent = 1
+    # safety_r = 5
+    # cur_pos = [0, 0, 0]
+    # agent_state_pred = [[[0, 0], [10, 0], [10, 10], [10, 20], [20, 20]]]
+    # lookahead_step_num = 5
+    # mpc = MPC(end_point, num_of_agent, safety_r) # max_v=3, lookahead_step_num=5, lookahead_step_timeinterval=0.1):
+    # sol = mpc.Solve(cur_pos, agent_state_pred)
+    # v_opt     = sol['x'][3 * lookahead_step_num]
+    # delta_opt = sol['x'][4 * lookahead_step_num - 1]
+    # print(v_opt, delta_opt)
+
 
     # MPC parameters
     lookahead_step_num = 5
@@ -224,22 +260,22 @@ if __name__ == '__main__':
 
     # start point and end point of ego robot
     start_point = [0.0, 0.0, 0.0]
-    end_point = [1, 0]
+    end_point = [10, 0]
 
     # agent velocity
     agent_vel = 0.1
 
     # start point and end point of agents
-    agent_start = [[0.5, -0.5], [0.6,-0.2], [0.8, -0.5]]
-    agent_end   = [[0.5, 0.5], [0.6, 0.7], [1, 1]]
+    agent_start = [[5, -5], [6, -2], [8, -5]]
+    agent_end   = [[5, 5], [6, 7], [10, 10]]
 
     num_of_agent = len(agent_start)
 
     # threshold of safety
-    safety_r = 0.1
+    safety_r = 1
 
     # max vx, vy
-    max_v = 0.3
+    max_v = 0.3*10
 
     agent_pt_list = []
 
@@ -257,8 +293,8 @@ if __name__ == '__main__':
 
         dist = sqrt((start_pos[0] - end_pos[0])**2 + (start_pos[1] - end_pos[1])**2)
         num_of_points = dist / (agent_vel * lookahead_step_timeinterval) + 1
-        xs = np.linspace(start_pos[0], end_pos[0], num_of_points)
-        ys = np.linspace(start_pos[1], end_pos[1], num_of_points)
+        xs = np.linspace(start_pos[0], end_pos[0], int(num_of_points))
+        ys = np.linspace(start_pos[1], end_pos[1], int(num_of_points))
         point_list = []
         for agent_x, agent_y in zip(xs, ys):
             point_list.append([agent_x, agent_y])
@@ -288,6 +324,7 @@ if __name__ == '__main__':
     plt.plot(end_point[0], end_point[1], 'o', label='target point')
 
     current_pos, = plt.plot([],[], ls='None', color='k', marker='o', label='current position')
+    car_outline, = plt.plot([],[], 'r--')
     agent_pos_1, = plt.plot([],[], ls='None', color='r', marker='o', label='agent')
     agent_danger_zone_1, = plt.plot([],[], 'r--', label='danger zone')
     agent_pos_2, = plt.plot([],[], ls='None', color='r', marker='o')
@@ -295,8 +332,9 @@ if __name__ == '__main__':
     agent_pos_3, = plt.plot([],[], ls='None', color='r', marker='o')
     agent_danger_zone_3, = plt.plot([],[], 'r--')
 
+
     plt.legend(loc='upper left')
-    plt.axis([-0.1, 1.1, -0.1, 1.1])
+    # plt.axis([-0.1*10, 1.1*10, -0.1*10, 1.1*10])
     plt.axis('equal')
     plt.grid()
 
