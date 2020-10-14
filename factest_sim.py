@@ -12,7 +12,7 @@ from empty_map import map
 from xref_planner import *
 import time
 
-filename = 'intersection_02_traj_ped.csv'
+filename = 'intersection_09_traj_ped.csv'
 pedNum = 120
 time_stamp = 0
 time_step = 0.1 #64e-3
@@ -27,12 +27,13 @@ goal = []
 obs = []
 pred_wps = None
 sense_ped =[[0,0]]
+ts1 = 0
 
 
 def animate(i):
     global cur_pos, time_step, time_stamp, agent_paths, stop
     global pedNum, agent_paths, lookahead_step_num, d_sense
-    global waypoints, ts, pred_wps, sense_ped
+    global waypoints, ts, pred_wps, sense_ped, ts1
 
     tsyn = None
     obs = []
@@ -51,6 +52,7 @@ def animate(i):
         # if pred_wps == None:
         # print(pred_wps)
         ts = time_step*time_stamp
+        ts1 = ts
 
     # plot car
     current_pos.set_data(cur_pos[0], cur_pos[1])
@@ -88,18 +90,18 @@ def animate(i):
             wps = set_waypoints(waypoints)
             t = [time_stamp*time_step, (time_stamp+1)*time_step]
             q = run_model(cur_pos, t, wps)
+            # print(wps)
             v = q[-2]
             omega = q[-1]
-            print(v)
         else:
             v = 0
             omega = 0
 
         # print(v)
-        with open('names3.csv', 'a+') as csvfile:
+        with open('names6.csv', 'a+') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=',')
             spamwriter.writerow([cur_pos[0], cur_pos[1], tsyn, time_stamp*time_step, len(waypoints), len(obs)])
-
+        #
         cur_pos[0] = cur_pos[0] + v*cos(cur_pos[2])*time_step
         cur_pos[1] = cur_pos[1] + v*sin(cur_pos[2])*time_step
         cur_pos[2] = cur_pos[2] + omega*time_step
@@ -109,8 +111,9 @@ def animate(i):
         time_stamp += 1
 
         if pred_wps != None:
-            if sqrt((cur_pos[0] - wps[2])**2 + (cur_pos[1] - wps[3])**2) < 2:
+            if sqrt((cur_pos[0] - wps[2])**2 + (cur_pos[1] - wps[3])**2) < 2:# and wps[-1] <= time_step*time_stamp - ts1:
                 waypoints.pop(0)
+                ts1 = time_step*time_stamp
                 if len(waypoints) < 2:
                     stop = 1
                     # print(time_step*time_stamp)

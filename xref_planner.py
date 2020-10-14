@@ -115,19 +115,31 @@ def find_xref(Theta, goal, obs, max_segs, l_min, bloat_list, old_wp = None):
 
         obj = 0
         obj2 = 0
-        x_min, y_min = -goal[1][0], -goal[1][2]
-        x_max, y_max = goal[1][1], goal[1][3]
+        x_min, y_min = -goal[1][0][0], -goal[1][2][0]
+        x_max, y_max = goal[1][1][0], goal[1][3][0]
         x_c = (x_min + x_max)/2
         y_c = (y_min + y_max)/2
         xf = [x_c, y_c]
+        x = []
+        for i in range(len(obs)):
+            x1_min, y1_min = -obs[i][1][0][0], -obs[i][1][2][0]
+            x1_max, y1_max = obs[i][1][1][0], obs[i][1][3][0]
+            x1 = (x1_min + x1_max)/2
+            y1 = (y1_min + y1_max)/2
+            x.append((x1, y1))
 
         for i in range(num_segs+1):
             xnew = m.addVars(dims+1)
             # if i == num_segs:
             #     obj = xnew[2]
-            tem_obj = (xnew[0] - x_c)*(xnew[0] - x_c) + (xnew[1] - y_c)*(xnew[1] - y_c) + xnew[2]
-            obj += tem_obj
+            tem_obj = (xnew[0] - x_c)*(xnew[0] - x_c) + (xnew[1] - y_c)*(xnew[1] - y_c) #- xnew[2]
+            tem_obj1 = (xnew[0] - x1)* (xnew[0] - x1)+ (xnew[1] - y1)*(xnew[1] - y1)
+            # tem_obj1 = 0
+            for i in range(len(obs)):
+                tem_obj1 += (xnew[0] - x[i][0])* (xnew[0] - x[i][0])#+ (xnew[1] - y1)*(xnew[1] - y1)
+            obj += -tem_obj
             xlist.append(xnew)
+        obj = x[-1][-1]
 
         m.setObjective(obj, GRB.MINIMIZE)
         m.setParam(GRB.Param.OutputFlag, 0)

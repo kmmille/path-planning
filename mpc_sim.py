@@ -33,9 +33,9 @@ def animate(i):
     global cur_pos, dist_to_goal, time_stamp, goal_num
     global stop
 
-    thres = 1
+    thres = 5
     if goal_num == 0:
-        thres = 3
+        thres = 5
 
     # if not pause:
         # get predicted future states of the agents
@@ -83,8 +83,8 @@ def animate(i):
             sensed.set_data([ped[0] for ped in sense_ped], [ped[1] for ped in sense_ped])
 
             # solve for optimal control actions
-            max_v = 1
-            safety_r = 1.5
+            max_v = 1.5
+            safety_r = 1.2
             # end_point = goal_points[goal_num]
             mpc_ = MPC(end_point=end_point,
                        num_of_agent=len(agent_pos_pred),
@@ -100,9 +100,9 @@ def animate(i):
             v_opt     = sol['x'][3 * lookahead_step_num]
             delta_opt = sol['x'][4 * lookahead_step_num - 1]
 
-            with open('names3_1.csv', 'a+') as csvfile:
-                spamwriter = csv.writer(csvfile, delimiter=',')
-                spamwriter.writerow([cur_pos[0], cur_pos[1], t_syn, time_stamp*lookahead_step_timeinterval, len(agent_pos_pred)])
+            # with open('names5.csv', 'a+') as csvfile:
+            #     spamwriter = csv.writer(csvfile, delimiter=',')
+            #     spamwriter.writerow([cur_pos[0], cur_pos[1], t_syn, time_stamp*lookahead_step_timeinterval, len(agent_pos_pred)])
 
             # simulate forward
             cur_pos[0] = cur_pos[0] + v_opt * lookahead_step_timeinterval * cos(cur_pos[2])
@@ -116,41 +116,42 @@ def animate(i):
         return current_pos, agent_pos, sensed
 
 if __name__ == '__main__':
-        filename = 'intersection_02_traj_ped.csv'
+        filename = 'intersection_09_traj_ped.csv'
         pedNum = 120
         agent_paths = createPedPath(filename, pedNum)
-        time_stamp = 1
-        pause = False
+        print(agent_paths)
+        # time_stamp = 1
+        # pause = False
+        #
+        # cur_pos = [122,2,0]
+        # time_step = 0
+        # lookahead_step_num = int(4/(0.1))
+        # d_sense = 10
+        # lookahead_step_timeinterval = 0.1# 64e-3
+        # dist_to_goal = 100
+        # # end_point = [136, 5]
+        # goal_points = [[135, 7], [138,20]]
+        # xlims = [None, [132, 139]]
+        # ylims = [[1, 7], None]
+        # goal_num = 0
+        # max_v = 3
 
-        cur_pos = [122,2,0]
-        time_step = 0
-        lookahead_step_num = int(1/(0.1))
-        d_sense = 10
-        lookahead_step_timeinterval = 0.1# 64e-3
-        dist_to_goal = 100
-        # end_point = [136, 5]
-        goal_points = [[135, 7], [138,20]]
-        xlims = [None, [132, 139]]
-        ylims = [[1, 7], None]
-        goal_num = 0
-        max_v = 3
-
-        fig, ax = plt.subplots(figsize=(7, 7))
-        fig.canvas.mpl_connect('button_press_event', onClick)
-
-        patches = [Rectangle((113, 9), 19, 21), Rectangle((113, -22), 19, 21), Rectangle((141, -22), 19, 21), Rectangle((141, 9), 19, 21)]
-        pc = PatchCollection(patches, facecolor='red')
-        ax.add_collection(pc)
-        ax.plot([131,138], [5, 20], ls = 'None', color = 'g')
-
-
-        current_pos, = plt.plot([], [] , ls='None', color='b', marker='o', label='car_pos')
-        # car_outline, = plt.plot([], [] , color='b')
-        agent_pos, = plt.plot([], [] , ls='None', color='k', marker='o', label='agent_pos')
-        sensed, = plt.plot([], [] , ls='None', color='g', marker='o', label='agent_pos')
-
-        ani = animation.FuncAnimation(fig, animate, frames=1000, interval=20)
-
-        plt.axis([118, 145, -3, 30])
-        plt.grid()
-        plt.show()
+        # fig, ax = plt.subplots(figsize=(7, 7))
+        # fig.canvas.mpl_connect('button_press_event', onClick)
+        #
+        # patches = [Rectangle((113, 9), 19, 21), Rectangle((113, -22), 19, 21), Rectangle((141, -22), 19, 21), Rectangle((141, 9), 19, 21)]
+        # pc = PatchCollection(patches, facecolor='red')
+        # ax.add_collection(pc)
+        # ax.plot([131,138], [5, 20], ls = 'None', color = 'g')
+        #
+        #
+        # current_pos, = plt.plot([], [] , ls='None', color='b', marker='o', label='car_pos')
+        # # car_outline, = plt.plot([], [] , color='b')
+        # agent_pos, = plt.plot([], [] , ls='None', color='k', marker='o', label='agent_pos')
+        # sensed, = plt.plot([], [] , ls='None', color='g', marker='o', label='agent_pos')
+        #
+        # ani = animation.FuncAnimation(fig, animate, frames=1000, interval=20)
+        #
+        # plt.axis([118, 145, -3, 30])
+        # plt.grid()
+        # plt.show()
