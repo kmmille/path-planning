@@ -38,11 +38,13 @@ def sense_peds(car_pos, pedNum, pedPaths, time_step, lookahead_step_num, d_sense
     x = car_pos[0]
     y = car_pos[1]
     ped_predict = []
+    sense_ped = []
     for i in range(pedNum):
         xp, yp = pedPaths[i][time_step]
         if sqrt((x - xp)**2 + (y - yp)**2) <= d_sense:
             ped_predict.append(pedPaths[i][time_step:time_step+lookahead_step_num])
-    return ped_predict
+            sense_ped.append([xp, yp])
+    return ped_predict, sense_ped
 
 def ped_rects(car_pos, pedNum, pedPaths, time_step, time_stamp, lookahead_step_num, d_sense):
     all_rects = []
@@ -53,16 +55,17 @@ def ped_rects(car_pos, pedNum, pedPaths, time_step, time_stamp, lookahead_step_n
     x = car_pos[0]
     y = car_pos[1]
     ped_predict = []
+    sense_ped = []
     for i in range(pedNum):
         xp, yp = pedPaths[i][time_stamp]
         if sqrt((x - xp)**2 + (y - yp)**2) <= d_sense:
-            pred_path = pedPaths[i][time_stamp:time_stamp+lookahead_step_num]
+            pred_path = pedPaths[i][time_stamp-2:time_stamp+lookahead_step_num]
             x_path = [pt[0] for pt in pred_path]
             y_path = [pt[1] for pt in pred_path]
-            b = np.array([[-(min(x_path)-2)],[(max(x_path)+2)],[-(min(y_path)-2)],[-(max(y_path)-2)],[-t1],[t2]])
+            b = np.array([[-(min(x_path)-3)],[(max(x_path)+3)],[-(min(y_path)-3)],[-(max(y_path)-3)],[-t1],[t2]])
             all_rects.append([A_time, b])
-
-    return all_rects
+            sense_ped.append([xp, yp])
+    return all_rects, sense_ped
 
 
 # if time_step*time_stamp - ts > 1:
