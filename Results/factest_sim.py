@@ -16,7 +16,7 @@ filename = 'intersection_09_traj_ped.csv'
 pedNum = 120
 time_stamp = 0
 time_step = 0.1 #64e-3
-cur_pos = [124,2,0,0,0]
+cur_pos = [122,6,0,0,0]
 stop = 0
 d_sense = 10
 agent_paths = createPedPath(filename, pedNum)
@@ -84,9 +84,12 @@ def animate(i):
         wps_y = [wp[1] for wp in pred_wps]
         path_proj.set_data(wps_x,wps_y)
         waypoints = pred_wps
+    else:
+        waypoints = []
+        # print(waypoints)
 
     if not stop:
-        if pred_wps != None:
+        if pred_wps != None and pred_wps!=[]:
             wps = set_waypoints(waypoints)
             t = [time_stamp*time_step, (time_stamp+1)*time_step]
             q = run_model(cur_pos, t, wps)
@@ -98,9 +101,9 @@ def animate(i):
             omega = 0
 
         # print(v)
-        # with open('names6.csv', 'a+') as csvfile:
-        #     spamwriter = csv.writer(csvfile, delimiter=',')
-        #     spamwriter.writerow([cur_pos[0], cur_pos[1], tsyn, time_stamp*time_step, len(waypoints), len(obs)])
+        with open('FACTEST_09_straight_4s.csv', 'a+') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=',')
+            spamwriter.writerow([cur_pos[0], cur_pos[1], tsyn, time_stamp*time_step, len(waypoints), len(obs)])
         #
         cur_pos[0] = cur_pos[0] + v*cos(cur_pos[2])*time_step
         cur_pos[1] = cur_pos[1] + v*sin(cur_pos[2])*time_step
@@ -114,7 +117,7 @@ def animate(i):
             if sqrt((cur_pos[0] - wps[2])**2 + (cur_pos[1] - wps[3])**2) < 2:# and wps[-1] <= time_step*time_stamp - ts1:
                 waypoints.pop(0)
                 ts1 = time_step*time_stamp
-                if len(waypoints) < 2:
+                if len(waypoints) < 1:
                     stop = 1
                     # print(time_step*time_stamp)
 
@@ -180,63 +183,63 @@ if __name__ == '__main__':
     # stop = 0
     # d_sense = 10
 
-    waypoints = [[122, 2, 0], [136, 5, 10], [138, 20, 20]]
-
+    # waypoints = [[122, 2, 0], [136, 5, 10], [138, 20, 20]]
+    #
     fig, ax = plt.subplots(figsize=(7, 7))
-
+    #
     patches = [Rectangle((113, 9), 19, 21), Rectangle((113, -22), 19, 21), Rectangle((141, -22), 19, 21), Rectangle((141, 9), 19, 21)]
     pc = PatchCollection(patches, facecolor='lightgreen', alpha = 0.6)
     ax.add_collection(pc)
-
-
-    plt.plot(cur_pos[0], cur_pos[1], ls='None', color='b', marker='o', label='Car')
-    xp = []
-    yp = []
-    for agent in agent_paths:
-        xp.append(agent[0][0])
-        yp.append(agent[0][1])
-    plt.plot(xp, yp , ls='None', color='k', marker='o', label='Pedestrians')
-    ped_preds, sense_ped = ped_rects(cur_pos, pedNum, agent_paths, 0.1, 0, int(4/0.1), d_sense)
-    all_rects = create_rects(ped_preds)
-    pc0 = PatchCollection(all_rects[0], facecolor = 'orange')
-    pc1 = PatchCollection(all_rects[1], facecolor = 'coral')
-    pc2 = PatchCollection(all_rects[2], facecolor = 'crimson')
-    pc3 = PatchCollection(all_rects[3], facecolor = 'maroon')
-    ax.add_collection(pc0)
-    ax.add_collection(pc1)
-    ax.add_collection(pc2)
-    ax.add_collection(pc3)
-
-
-    xs = []
-    ys = []
-    for ped in sense_ped:
-        xs.append(ped[0])
-        ys.append(ped[1])
-    sensed = plt.plot(xs, ys , ls='None', color='g', marker='o', label='Sensed pedestrians')
-
-    theta, goal, obs = map(cur_pos)
-    obs.extend(ped_preds)
-    bloat_list = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
-    pred_wps = find_xref(theta, goal, obs, 10, 5, bloat_list, old_wp = pred_wps)
-
-    xlist = []
-    ylist = []
-    for x, y, t in pred_wps:
-        xlist.append(x)
-        ylist.append(y)
-
-    plt.plot([135.5], [22.5], ls = 'None', marker = 'o', color = 'g', markersize = 20, alpha = 0.6)
-    plt.plot(xlist, ylist,ls = '--', color='g', label = 'Synthesized path')
+    #
+    #
+    # plt.plot(cur_pos[0], cur_pos[1], ls='None', color='b', marker='o', label='Car')
+    # xp = []
+    # yp = []
+    # for agent in agent_paths:
+    #     xp.append(agent[0][0])
+    #     yp.append(agent[0][1])
+    # plt.plot(xp, yp , ls='None', color='k', marker='o', label='Pedestrians')
+    # ped_preds, sense_ped = ped_rects(cur_pos, pedNum, agent_paths, 0.1, 0, int(4/0.1), d_sense)
+    # all_rects = create_rects(ped_preds)
+    # pc0 = PatchCollection(all_rects[0], facecolor = 'orange')
+    # pc1 = PatchCollection(all_rects[1], facecolor = 'coral')
+    # pc2 = PatchCollection(all_rects[2], facecolor = 'crimson')
+    # pc3 = PatchCollection(all_rects[3], facecolor = 'maroon')
+    # ax.add_collection(pc0)
+    # ax.add_collection(pc1)
+    # ax.add_collection(pc2)
+    # ax.add_collection(pc3)
+    #
+    #
+    # xs = []
+    # ys = []
+    # for ped in sense_ped:
+    #     xs.append(ped[0])
+    #     ys.append(ped[1])
+    # sensed = plt.plot(xs, ys , ls='None', color='g', marker='o', label='Sensed pedestrians')
+    #
+    # theta, goal, obs = map(cur_pos)
+    # obs.extend(ped_preds)
+    # bloat_list = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    # pred_wps = find_xref(theta, goal, obs, 10, 5, bloat_list, old_wp = pred_wps)
+    #
+    # xlist = []
+    # ylist = []
+    # for x, y, t in pred_wps:
+    #     xlist.append(x)
+    #     ylist.append(y)
+    #
+    # plt.plot([135.5], [22.5], ls = 'None', marker = 'o', color = 'g', markersize = 20, alpha = 0.6)
+    # plt.plot(xlist, ylist,ls = '--', color='g', label = 'Synthesized path')
     # print(pred_wps)
 
-    # current_pos, = plt.plot([], [] , ls='None', color='b', marker='o', label='car_pos')
-    # # car_outline, = plt.plot([], [] , color='b')
-    # agent_pos, = plt.plot([], [] , ls='None', color='k', marker='o', label='agent_pos')
-    # path_proj, = plt.plot([], [] , ls = '--', color='g')
-    # sensed, = plt.plot([], [] , ls='None', color='g', marker='o', label='agent_pos')
+    current_pos, = plt.plot([], [] , ls='None', color='b', marker='o', label='car_pos')
+    # car_outline, = plt.plot([], [] , color='b')
+    agent_pos, = plt.plot([], [] , ls='None', color='k', marker='o', label='agent_pos')
+    path_proj, = plt.plot([], [] , ls = '--', color='g')
+    sensed, = plt.plot([], [] , ls='None', color='g', marker='o', label='agent_pos')
 
-    # ani = animation.FuncAnimation(fig, animate, frames=1000, interval = 100)
+    ani = animation.FuncAnimation(fig, animate, frames=1000, interval = 100)
 
     plt.axis([118, 145, -3, 30])
     plt.legend()

@@ -9,7 +9,7 @@ def map(pos):
     b_theta = np.array([[-(x-0.1)],[x+0.1],[-(y-0.1)],[y+0.1]])
     theta = [A, b_theta]
 
-    b_goal = np.array([[-133], [138], [-20], [25]])
+    b_goal = np.array([[-140], [145], [-1], [6]])
     goal = [A, b_goal]
 
     b1 = np.array([[-113], [113+19], [-9], [9 + 21], [0], [1e2]])

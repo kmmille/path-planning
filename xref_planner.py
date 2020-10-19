@@ -51,7 +51,7 @@ def add_obstacle_constraint(model, xlist, A, b, bloat_factor, ob_num, seg_num):
         tem_constr2 = 0
         h_norm = np.linalg.norm(A[edge])
 
-        for i in range(dims-1):
+        for i in range(dims):
             tem_constr1 += A[edge][i]*x1[i]
             tem_constr2 += A[edge][i]*x2[i]
 
@@ -65,15 +65,16 @@ def add_obstacle_constraint(model, xlist, A, b, bloat_factor, ob_num, seg_num):
 
 def add_time_constraints(model, xlist):
     for i in range(len(xlist) - 1):
-        model.addConstr(xlist[i+1][2] - xlist[i][2] >= 10)
+        model.addConstr(xlist[i+1][2] - xlist[i][2] >= 15)
+        model.addConstr(xlist[i+1][2] - xlist[i][2] <= 100)
     return None
 
 def add_avoidance_constraints(model, xlist, obs, max_segs, bloat_factors):
     for seg_num in range(max_segs):
 
         bloat_factor = 3
-        if seg_num == 0:
-            bloat_factor = 0
+        # if seg_num == 0:
+        #     bloat_factor = 3
 
         for ob_num in range(len(obs)):
             A, b = obs[ob_num]
@@ -132,14 +133,14 @@ def find_xref(Theta, goal, obs, max_segs, l_min, bloat_list, old_wp = None):
             xnew = m.addVars(dims+1)
             # if i == num_segs:
             #     obj = xnew[2]
-            tem_obj = (xnew[0] - x_c)*(xnew[0] - x_c) + (xnew[1] - y_c)*(xnew[1] - y_c) #- xnew[2]
-            tem_obj1 = (xnew[0] - x1)* (xnew[0] - x1)+ (xnew[1] - y1)*(xnew[1] - y1)
+            tem_obj = (xnew[0] - x_c)*(xnew[0] - x_c) + (xnew[1] - y_c)*(xnew[1] - y_c)# xnew[2]
+            # tem_obj1 = (xnew[0] - x1)* (xnew[0] - x1)+ (xnew[1] - y1)*(xnew[1] - y1)
             # tem_obj1 = 0
-            for i in range(len(obs)):
-                tem_obj1 += (xnew[0] - x[i][0])* (xnew[0] - x[i][0])#+ (xnew[1] - y1)*(xnew[1] - y1)
-            obj += -tem_obj
+            # for i in range(len(obs)):
+            #     tem_obj1 += (xnew[0] - x[i][0])* (xnew[0] - x[i][0])#+ (xnew[1] - y1)*(xnew[1] - y1)
+            obj += tem_obj
             xlist.append(xnew)
-        obj = x[-1][-1]
+
 
         m.setObjective(obj, GRB.MINIMIZE)
         m.setParam(GRB.Param.OutputFlag, 0)
